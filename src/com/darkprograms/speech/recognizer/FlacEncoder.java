@@ -17,84 +17,80 @@ import java.nio.ByteOrder;
  */
 public class FlacEncoder {
 
-    /**
-     * Constructor
-     */
-    public FlacEncoder() {
+  /**
+   * Constructor
+   */
+  public FlacEncoder() {
 
-    }
+  }
 
-    /**
-     * Converts a wave file to a FLAC file(in order to POST the data to Google and retrieve a response) <br>
-     * Sample Rate is 8000 by default
-     *
-     * @param inputFile  Input wave file
-     * @param outputFile Output FLAC file
-     */
-    public void convertWaveToFlac(File inputFile, File outputFile) {
+  /**
+   * Converts a wave file to a FLAC file(in order to POST the data to Google and retrieve a response) <br>
+   * Sample Rate is 8000 by default
+   *
+   * @param inputFile  Input wave file
+   * @param outputFile Output FLAC file
+   */
+  public void convertWaveToFlac(File inputFile, File outputFile) {
 
+    StreamConfiguration streamConfiguration = new StreamConfiguration();
+    streamConfiguration.setSampleRate(8000);
+    streamConfiguration.setBitsPerSample(16);
+    streamConfiguration.setChannelCount(1);
 
-        StreamConfiguration streamConfiguration = new StreamConfiguration();
-        streamConfiguration.setSampleRate(8000);
-        streamConfiguration.setBitsPerSample(16);
-        streamConfiguration.setChannelCount(1);
+    try {
+      AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputFile);
+      AudioFormat format = audioInputStream.getFormat();
 
+      int frameSize = format.getFrameSize();
 
-        try {
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputFile);
-            AudioFormat format = audioInputStream.getFormat();
+      FLACEncoder flacEncoder = new FLACEncoder();
+      FLACFileOutputStream flacOutputStream = new FLACFileOutputStream(outputFile);
 
-            int frameSize = format.getFrameSize();
+      flacEncoder.setStreamConfiguration(streamConfiguration);
+      flacEncoder.setOutputStream(flacOutputStream);
 
-            FLACEncoder flacEncoder = new FLACEncoder();
-            FLACFileOutputStream flacOutputStream = new FLACFileOutputStream(outputFile);
+      flacEncoder.openFLACStream();
 
-            flacEncoder.setStreamConfiguration(streamConfiguration);
-            flacEncoder.setOutputStream(flacOutputStream);
+      int[] sampleData = new int[(int) audioInputStream.getFrameLength()];
+      byte[] samplesIn = new byte[frameSize];
 
-            flacEncoder.openFLACStream();
+      int i = 0;
 
-            int[] sampleData = new int[(int) audioInputStream.getFrameLength()];
-            byte[] samplesIn = new byte[frameSize];
-
-            int i = 0;
-
-            while (audioInputStream.read(samplesIn, 0, frameSize) != -1) {
-                if(frameSize != 1){
-                ByteBuffer bb = ByteBuffer.wrap(samplesIn);
-                bb.order(ByteOrder.LITTLE_ENDIAN);
-                short shortVal = bb.getShort();
-                sampleData[i] = shortVal;
-                }else{
-                    sampleData[i] = samplesIn[0];
-                }
-
-                i++;
-            }
-
-            flacEncoder.addSamples(sampleData, i);
-            flacEncoder.encodeSamples(i, false);
-            flacEncoder.encodeSamples(flacEncoder.samplesAvailableToEncode(), true);
-
-            audioInputStream.close();
-            flacOutputStream.close();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
+      while (audioInputStream.read(samplesIn, 0, frameSize) != -1) {
+        if (frameSize != 1) {
+          ByteBuffer bb = ByteBuffer.wrap(samplesIn);
+          bb.order(ByteOrder.LITTLE_ENDIAN);
+          short shortVal = bb.getShort();
+          sampleData[i] = shortVal;
+        } else {
+          sampleData[i] = samplesIn[0];
         }
+
+        i++;
+      }
+
+      flacEncoder.addSamples(sampleData, i);
+      flacEncoder.encodeSamples(i, false);
+      flacEncoder.encodeSamples(flacEncoder.samplesAvailableToEncode(), true);
+
+      audioInputStream.close();
+      flacOutputStream.close();
+
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
+  }
 
-
-    /**
-     * Converts a wave file to a FLAC file(in order to POST the data to Google and retrieve a response) <br>
-     * Sample Rate is 8000 by default
-     *
-     * @param inputFile  Input wave file
-     * @param outputFile Output FLAC file
-     */
-    public void convertWaveToFlac(String inputFile, String outputFile) {
-        convertWaveToFlac(new File(inputFile), new File(outputFile));
-    }
-
+  /**
+   * Converts a wave file to a FLAC file(in order to POST the data to Google and retrieve a response) <br>
+   * Sample Rate is 8000 by default
+   *
+   * @param inputFile  Input wave file
+   * @param outputFile Output FLAC file
+   */
+  public void convertWaveToFlac(String inputFile, String outputFile) {
+    convertWaveToFlac(new File(inputFile), new File(outputFile));
+  }
 
 }
